@@ -88,7 +88,7 @@ function advanceTurn() {
         return;
     }
 
-    let nextIndex = currentPlayerIndex;
+    let nextIndex = (currentPlayerIndex + 1) % players.length;
 
     while (players[nextIndex].turns >= roundLimit) {
         nextIndex = (nextIndex + 1) % players.length;
@@ -127,7 +127,15 @@ export function newGame() {
     startNextRound(0);
 }
 
+function isFirstTurn() {
+    const currentPlayer = getCurrentPlayer();
+    return currentPlayer && currentPlayer.turns === 0;
+}
+
 function rollLeftDie() {
+    if(isFirstTurn()) {
+        return;
+    }
     const image1 = document.querySelectorAll("img")[0];
     const image2 = document.querySelectorAll("img")[1];
     const leftDie = getRandomDieValue();
@@ -151,6 +159,9 @@ function rollBothDice() {
 }
 
 function rollRightDie() {
+    if(isFirstTurn()) {
+        return;
+    }
     const image1 = document.querySelectorAll("img")[0];
     const image2 = document.querySelectorAll("img")[1];
     const leftDie = getDieValue(image1);
