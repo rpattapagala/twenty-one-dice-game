@@ -2,7 +2,7 @@
 <html lang="en" dir="ltr">
   <head>
     <meta charset="utf-8">
-    <title>Dicee</title>
+    <title>Dice</title>
     <link rel="stylesheet" href="styles.css">
     <!-- Link Google fonts -->
     <link href="https://fonts.googleapis.com/css?family=Indie+Flower|Lobster" rel="stylesheet">
@@ -12,30 +12,58 @@
   <body>
 
     <div class="container">
-      <h1>Refresh Me</h1>
+      <h1>Twenty One</h1>
 
-      <div class="dice">
-        <p>Player 1</p>
-        <img class="img1" src="./images/dice6.png">
+      <div class="fieldset">
+      <!-- fields are built here -->
       </div>
+      <div class="menu-buttons">
+        <br>
+        <button id="add-player">
+          <i class="fa-solid fa-plus"> Add Player</i>
+        </button>
 
-      <div class="dice">
-        <p>Player 2</p>
-        <img class="img2" src="./images/dice6.png">
-      </div>
-
-      <div class="button-container">
-        <button>
-          <i class="fa-solid fa-shuffle"></i>
+        <button id="start">
+          <i class="fa-solid fa-arrow"> Start</i>
         </button>
       </div>
 
+      <div class="board" style="flex-wrap: wrap; justify-content: space-around;">
+        <div class="dice">
+          <img class="img1" src="./images/dice2.png" alt="">
+        </div>
+
+        <div class="dice">
+          <img class="img2" src="./images/dice1.png" alt="">
+        </div>
+
+        <div class="button-container">
+          <button id="button1">
+            <i class="fa-solid fa-shuffle"> Left</i>
+          </button>
+          <label>a</label>
+          <button id="button2">
+            <i class="fa-solid fa-shuffle"> Both</i>
+          </button>
+          <label>a</label>
+          <button id="button3">
+            <i class="fa-solid fa-shuffle"> Right</i>
+          </button>
+        </div>
+        <button class="stop-button" id="button4">
+          <i class="fa-solid fa-stop"> End</i>
+        </button>
+
+        <div class="status-board" id="status-board"></div>
+      </div>
     </div>
 
-    <script src="./dice.js"></script>
+    <script type="module" src="./dice.js"></script>
+    <script type="module" src="./player.js"></script>
+    <script type="module" src="./menu.js"></script>
   </body>
 
   <footer>
-    www 🎲 Dicee Game 🎲 com
+    made by chocolate
   </footer>
 </html>

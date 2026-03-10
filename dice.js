@@ -1,96 +1,187 @@
-// Function to let the button roll the dice
+import { getPlayerList } from "./menu.js";
+import { Player } from "./player.js";
 
-function rollDice() {
-    // Get random numbers between 1 - 6
-    const randomNumber1 = Math.floor(Math.random() * 6) + 1;
+const players = [];
+let currentPlayerIndex = 0;
+let roundLimit = 3;
+let roundStarted = false;
 
-    // Get a random dice
-    const randomDice = "dice"+randomNumber1+".png";
+function getRandomDieValue() {
+    return Math.floor(Math.random() * 6) + 1;
+}
 
-    // Get images source with random dice
-    const randomImageSource = "/images/"+randomDice;
+function getDieValue(image) {
+    const match = image.getAttribute("src").match(/dice(\d)\.png$/);
+    return match ? Number(match[1]) : 6;
+}
 
+function setDieImage(image, value) {
+    image.setAttribute("src", `./images/dice${value}.png`);
+}
 
-    // Randomise player one dice
-    const image1 = document.querySelectorAll("img") [0]; 
-    // 👆 this selects all image tags and then chooses the first [index 0]
+function getCurrentPlayer() {
+    return players[currentPlayerIndex] ?? null;
+}
 
-    // Now target the attribute - src  of image1 and change set the image to random
-    image1.setAttribute("src", randomImageSource);
-
-
-    // Let's create another randomiser for player 2
-    const randomNumber2 = Math.floor(Math.random() * 6) + 1;
-
-    // random dice for player 2
-    const randomDice2 = "/images/dice"+randomNumber2+".png";
-
-    // Let's randomise player two
-
-    const image2 = document.querySelectorAll("img") [1]; 
-    // 👆 this selects image tag [index 1] 
-
-    // Now set element
-    image2.setAttribute("src", randomDice2);
-
-
-    // Who wins?
-    if (randomNumber1 > randomNumber2) {
-        document.querySelector("h1").innerHTML = "😎 Player one wins"; // Change h1 text
-        document.querySelector("h1").style.color = "#fefae0"; // Change h1 color
-        document.body.style.backgroundColor = "#14213d"; // Change page background color
-        document.querySelectorAll("p")[0].style.color = "#fefae0"; // Change the text color like h1
-        document.querySelectorAll("p")[0].style.textShadow = '0 0 30px #fefae0'; // Add a glow to the text
-    
-        // Reset styles for the other paragraph for every refresh
-        document.querySelectorAll("p")[1].style.color = "";
-        document.querySelectorAll("p")[1].style.textShadow = '';
+function getScoreFromDice(leftDie, rightDie) {
+    if (leftDie === rightDie) {
+        return leftDie * 100;
     }
-    else if (randomNumber2 > randomNumber1) {
-        document.querySelector("h1").innerHTML = "Player two wins 😎"
-        document.querySelector("h1").style.color = "#ffddd2";
-        document.body.style.backgroundColor = "#3d405b";
-        document.querySelectorAll("p")[1].style.color = "#ffddd2";
-        document.querySelectorAll("p")[1].style.textShadow = '0 0 30px #ffddd2';
-    
-        // Reset styles for the other paragraph
-        document.querySelectorAll("p")[0].style.color = "";
-        document.querySelectorAll("p")[0].style.textShadow = '';
+
+    return Math.max(leftDie, rightDie) * 10 + Math.min(leftDie, rightDie);
+}
+
+function renderStatus(prefix = "") {
+    const statusBoard = document.getElementById("status-board");
+    const badges = players
+        .map((player, index) => {
+            const activeClass = index === currentPlayerIndex ? " is-active" : "";
+            return `
+                <div class="player-badge${activeClass}">
+                    <div class="player-badge__name">${player.name}</div>
+                    <div class="player-badge__stats">
+                        <span class="player-chip">${player.wins} Wins</span>
+                        <span class="player-chip">${player.turns} Turn</span>
+                        <span class="player-chip">${player.score} Score</span>
+                    </div>
+                </div>
+            `;
+        })
+        .join("");
+
+    document.body.style.backgroundColor = "#14213d";
+    statusBoard.innerHTML = `${prefix ? `<div class="status-message">${prefix}</div>` : ""}${badges}`;
+}
+
+function startNextRound(startingPlayerIndex = 0) {
+    players.forEach((player) => {
+        player.score = 0;
+        player.turns = 0;
+    });
+
+    roundLimit = 3;
+    currentPlayerIndex = startingPlayerIndex;
+    roundStarted = true;
+    renderStatus();
+}
+
+function finishRound() {
+    const maxScore = Math.max(...players.map((player) => player.score));
+    const twentyOne = players.filter((player) => player.score === 21);
+    let winners = players.filter((player) => player.score === maxScore);
+    if(twentyOne.length > 0) {
+        winners = twentyOne;
+    }
+
+    winners.forEach((player) => {
+        player.wins += 1;
+    });
+
+    const winnerNames = winners.map((player) => player.name).join(", ");
+    renderStatus(`Round winner: ${winnerNames}.`);
+    startNextRound(players.indexOf(winners[0]));
+}
+
+function advanceTurn() {
+    if (players.every((player) => player.turns >= roundLimit)) {
+        finishRound();
+        return;
+    }
+
+    let nextIndex = currentPlayerIndex;
+
+    while (players[nextIndex].turns >= roundLimit) {
+        nextIndex = (nextIndex + 1) % players.length;
+    }
+
+    currentPlayerIndex = nextIndex;
+    renderStatus();
+}
+
+function completeTurn(rolledScore) {
+    const currentPlayer = getCurrentPlayer();
+    if (!currentPlayer) {
+        return;
+    }
+
+    currentPlayer.score = rolledScore;
+    currentPlayer.turns += 1;
+    advanceTurn();
+}
+
+export function newGame() {
+    const playerNames = getPlayerList();
+    if (!roundStarted) {
+        players.length = 0;
+        playerNames.forEach((name) => {
+            players.push(new Player(name, 0, 0, 0));
+        });
+    }
+
+    if (players.length === 0) {
+        return;
+    }
+
+    setDieImage(document.querySelectorAll("img")[0], 6);
+    setDieImage(document.querySelectorAll("img")[1], 6);
+    startNextRound(0);
+}
+
+function rollLeftDie() {
+    const image1 = document.querySelectorAll("img")[0];
+    const image2 = document.querySelectorAll("img")[1];
+    const leftDie = getRandomDieValue();
+    const rightDie = getDieValue(image2);
+
+    setDieImage(image1, leftDie);
+    setDiceLabel(leftDie, rightDie);
+    completeTurn(getScoreFromDice(leftDie, rightDie));
+}
+
+function rollBothDice() {
+    const image1 = document.querySelectorAll("img")[0];
+    const image2 = document.querySelectorAll("img")[1];
+    const leftDie = getRandomDieValue();
+    const rightDie = getRandomDieValue();
+
+    setDieImage(image1, leftDie);
+    setDieImage(image2, rightDie);
+    setDiceLabel(leftDie, rightDie);
+    completeTurn(getScoreFromDice(leftDie, rightDie));
+}
+
+function rollRightDie() {
+    const image1 = document.querySelectorAll("img")[0];
+    const image2 = document.querySelectorAll("img")[1];
+    const leftDie = getDieValue(image1);
+    const rightDie = getRandomDieValue();
+
+    setDieImage(image2, rightDie);
+    setDiceLabel(leftDie, rightDie);
+    completeTurn(getScoreFromDice(leftDie, rightDie));
+}
+
+function endTurnEarly() {
+    const currentPlayer = getCurrentPlayer();
+    if (!currentPlayer) {
+        return;
+    }
+
+    roundLimit = Math.min(roundLimit, Math.max(currentPlayer.turns, 1));
+    advanceTurn();
+}
+
+function setDiceLabel(leftDie, rightDie) {
+    const score = getScoreFromDice(leftDie, rightDie);
+    if(score !== 21) {
+        document.querySelector("h1").innerHTML = String(score);
     }
     else {
-        document.querySelector("h1").innerHTML = "Draw! 🤝";
-    
-        // Reset styles for both paragraphs in case of a draw
-        document.body.style.backgroundColor = "#393E46";
-        document.querySelectorAll("p")[0].style.color = "";
-        document.querySelectorAll("p")[0].style.textShadow = '';
-        document.querySelectorAll("p")[1].style.color = "";
-        document.querySelectorAll("p")[1].style.textShadow = '';
+        document.querySelector("h1").innerHTML = "Twenty One!";
     }
 }
 
-// Get the button element and add a click event listener
-const button = document.querySelector("button");
-button.addEventListener("click", rollDice);
-
-
-/*
-// Randomise the two CSS to give 1 & 2 -- discarded idea
-
-const randNum = Math.floor(Math.random() * 2) + 1;
-
-// Get random CSS name
-const randCSS = "/styles"+randNum+".css";
-
-//Randomise CSS
-// const css = document.querySelector("css"); // select CSS
-
-// Select CSS link element
-const css = document.querySelector('link[rel="stylesheet"][href^="/styles"]');
-
-// const css1 = "styles"+randNum+".css";
-
-css.setAttribute("href", randCSS)
-
-console.log(randCSS)
-*/
+document.getElementById("button1").addEventListener("click", rollLeftDie);
+document.getElementById("button2").addEventListener("click", rollBothDice);
+document.getElementById("button3").addEventListener("click", rollRightDie);
+document.getElementById("button4").addEventListener("click", endTurnEarly);

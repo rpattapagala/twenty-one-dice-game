@@ -22,10 +22,74 @@ h1 {
   color: #4ECCA3;
 }
 
+h2 {
+  margin: 30px;
+  font-family: 'Lobster', cursive;
+  text-shadow: 5px 0 #232931;
+  font-size: 5rem;
+  color: #4ECCA3;
+}
+
 p {
   font-size: 2rem;
   color: #4ECCA3;
   font-family: 'Indie Flower', cursive;
+}
+
+.status-board {
+  margin-top: 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+}
+
+.player-badge {
+  min-width: 170px;
+  padding: 14px 18px;
+  border: 2px solid #4ECCA3;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #232931, #2d3641);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+  color: #EEEEEE;
+  font-family: 'Indie Flower', cursive;
+}
+
+.player-badge.is-active {
+  border-color: #fefae0;
+  box-shadow: 0 0 50px rgba(254, 250, 224, 0.35);
+  transform: translateY(-2px);
+}
+
+.player-badge__name {
+  margin-bottom: 8px;
+  font-size: 1.7rem;
+  color: #fefae0;
+}
+
+.player-badge__stats {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.player-chip {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background-color: #4ECCA3;
+  color: #14213d;
+  font-size: 1.5rem;
+  font-weight: bold;
+  letter-spacing: 0.03em;
+}
+
+.status-message {
+  width: 100%;
+  margin-bottom: 6px;
+  color: #fefae0;
+  font-family: 'Indie Flower', cursive;
+  font-size: 1.5rem;
 }
 
 img {
@@ -39,6 +103,25 @@ img {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.stop-button {
+  width: 40%;
+  height: 100%;
+  font-size: 24px;
+  color: white;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  border-radius: 5px;
+  background-color: #4ECCA3;
+  padding: 1%;
+}
+
+.stop-button:hover {
+  background-color: #4ECCA3;
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(4, 217, 18, 0.8);
 }
 
 button {
@@ -64,4 +147,31 @@ footer {
   color: #EEEEEE;
   text-align: center;
   font-family: 'Indie Flower', cursive;
+}
+
+input[type="text"] {
+  width: 280px;
+  padding: 12px 16px;
+  font-size: 1.4rem;
+  font-family: 'Indie Flower', cursive;
+  color: #EEEEEE;
+  background-color: #232931;
+  border: 2px solid #4ECCA3;
+  border-radius: 8px;
+  outline: none;
+  text-align: center;
+  box-shadow: 0 0 12px rgba(78, 204, 163, 0.15);
+}
+
+input[type="text"]::placeholder {
+  color: rgba(238, 238, 238, 0.6);
+}
+
+input[type="text"]:focus {
+  border-color: #fefae0;
+  box-shadow: 0 0 18px rgba(254, 250, 224, 0.35);
+}
+
+.is-hidden {
+  display: none;
 }
