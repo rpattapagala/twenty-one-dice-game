@@ -1,0 +1,11 @@
+Index: netlify.toml
+===================================================================
+diff --git a/netlify.toml b/netlify.toml
+deleted file mode 100644
+--- a/netlify.toml	(revision 20e2797b33a76d7f61179a3bb6dba41cd7256873)
++++ /dev/null	(revision 20e2797b33a76d7f61179a3bb6dba41cd7256873)
+@@ -1,4 +0,0 @@
+-[[redirects]]
+-from = "/*"
+-to = "index.html"
+-status = 200

@@ -3,8 +3,9 @@ import { Player } from "./player.js";
 
 const players = [];
 let currentPlayerIndex = 0;
-let roundLimit = 3;
 let roundStarted = false;
+let currentTurnRolls = 0;
+let roundRollLimit = 3;
 
 function getRandomDieValue() {
     return Math.floor(Math.random() * 6) + 1;
@@ -36,12 +37,14 @@ function renderStatus(prefix = "") {
     const badges = players
         .map((player, index) => {
             const activeClass = index === currentPlayerIndex ? " is-active" : "";
+            const rollCap = player.turns === 0 ? roundRollLimit : player.turns;
+            const rollLabel = index === currentPlayerIndex ? `${currentTurnRolls}/${rollCap} Rolls` : `${player.turns} Rolls`;
             return `
                 <div class="player-badge${activeClass}">
                     <div class="player-badge__name">${player.name}</div>
                     <div class="player-badge__stats">
                         <span class="player-chip">${player.wins} Wins</span>
-                        <span class="player-chip">${player.turns} Turn</span>
+                        <span class="player-chip">${rollLabel}</span>
                         <span class="player-chip">${player.score} Score</span>
                     </div>
                 </div>
@@ -59,9 +62,10 @@ function startNextRound(startingPlayerIndex = 0) {
         player.turns = 0;
     });
 
-    roundLimit = 3;
     currentPlayerIndex = startingPlayerIndex;
     roundStarted = true;
+    currentTurnRolls = 0;
+    roundRollLimit = 3;
     renderStatus();
 }
 
@@ -83,29 +87,52 @@ function finishRound() {
 }
 
 function advanceTurn() {
-    if (players.every((player) => player.turns >= roundLimit)) {
+    if (players.every((player) => player.turns > 0)) {
         finishRound();
         return;
     }
 
     let nextIndex = (currentPlayerIndex + 1) % players.length;
 
-    while (players[nextIndex].turns >= roundLimit) {
+    while (players[nextIndex].turns > 0) {
         nextIndex = (nextIndex + 1) % players.length;
     }
 
     currentPlayerIndex = nextIndex;
+    currentTurnRolls = 0;
     renderStatus();
 }
 
-function completeTurn(rolledScore) {
+function recordRoll(rolledScore) {
     const currentPlayer = getCurrentPlayer();
     if (!currentPlayer) {
         return;
     }
 
     currentPlayer.score = rolledScore;
-    currentPlayer.turns += 1;
+    currentTurnRolls += 1;
+
+    const reachedRollLimit = currentTurnRolls >= roundRollLimit;
+
+    if (rolledScore === 21 || reachedRollLimit) {
+        endCurrentTurn();
+        return;
+    }
+
+    renderStatus();
+}
+
+function endCurrentTurn() {
+    const currentPlayer = getCurrentPlayer();
+    if (!currentPlayer || currentTurnRolls === 0) {
+        return;
+    }
+
+    currentPlayer.turns = currentTurnRolls;
+    if (players.filter((player) => player.turns > 0).length === 1) {
+        roundRollLimit = currentTurnRolls;
+    }
+
     advanceTurn();
 }
 
@@ -128,8 +155,7 @@ export function newGame() {
 }
 
 function isFirstTurn() {
-    const currentPlayer = getCurrentPlayer();
-    return currentPlayer && currentPlayer.turns === 0;
+    return currentTurnRolls === 0;
 }
 
 function rollLeftDie() {
@@ -143,7 +169,7 @@ function rollLeftDie() {
 
     setDieImage(image1, leftDie);
     setDiceLabel(leftDie, rightDie);
-    completeTurn(getScoreFromDice(leftDie, rightDie));
+    recordRoll(getScoreFromDice(leftDie, rightDie));
 }
 
 function rollBothDice() {
@@ -155,7 +181,7 @@ function rollBothDice() {
     setDieImage(image1, leftDie);
     setDieImage(image2, rightDie);
     setDiceLabel(leftDie, rightDie);
-    completeTurn(getScoreFromDice(leftDie, rightDie));
+    recordRoll(getScoreFromDice(leftDie, rightDie));
 }
 
 function rollRightDie() {
@@ -169,17 +195,11 @@ function rollRightDie() {
 
     setDieImage(image2, rightDie);
     setDiceLabel(leftDie, rightDie);
-    completeTurn(getScoreFromDice(leftDie, rightDie));
+    recordRoll(getScoreFromDice(leftDie, rightDie));
 }
 
 function endTurnEarly() {
-    const currentPlayer = getCurrentPlayer();
-    if (!currentPlayer) {
-        return;
-    }
-
-    roundLimit = Math.min(roundLimit, Math.max(currentPlayer.turns, 1));
-    advanceTurn();
+    endCurrentTurn();
 }
 
 function setDiceLabel(leftDie, rightDie) {
