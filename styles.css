@@ -4,16 +4,32 @@
   text-align: center;
 }
 
+.dice-plate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(12px, 4vw, 40px);
+  box-sizing: border-box;
+  width: min(100%, 560px);
+  margin: 16px auto 24px;
+  padding: 32px 20px;
+  border: 8px solid #46655e;
+  border-radius: 48px;
+  background: radial-gradient(ellipse at center, #304b43, #1c302b);
+  box-shadow:
+    inset 0 4px 14px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 2px rgba(159, 220, 192, 0.2),
+    0 6px 0 #182b25,
+    0 14px 24px rgba(0, 0, 0, 0.3);
+}
+
 .dice {
   text-align: center;
   display: inline-block;
   box-sizing: border-box;
-  width: min(40%, 240px);
-  margin: 12px;
-  padding: 24px 12px;
-  border: 2px solid #4ECCA3;
-  border-radius: 18px;
-  background-color: #232931;
+  flex: 1;
+  min-width: 0;
+  max-width: 200px;
 }
 
 body {
