@@ -96,6 +96,27 @@ img {
   width: 80%;
 }
 
+.dice img.is-rolling {
+  animation: dice-roll 280ms ease-in-out infinite;
+}
+
+@keyframes dice-roll {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-12px) rotate(-14deg); }
+  75% { transform: translateY(-6px) rotate(14deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dice img.is-rolling {
+    animation: none;
+  }
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
 .button-container {
   margin-top: 2rem;
   width: 100%;

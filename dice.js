@@ -6,6 +6,9 @@ let currentPlayerIndex = 0;
 let currentTurnRolls = 0;
 let roundRollLimit = 3;
 let cpuTimer = null;
+let rollTimer = null;
+let faceTimer = null;
+let isRolling = false;
 
 function takeCpuTurn() {
     const player = getCurrentPlayer();
@@ -61,7 +64,7 @@ function renderStatus(prefix = "") {
     clearTimeout(cpuTimer);
     const cpuTurn = Boolean(getCurrentPlayer()?.isCpu);
     ["button1", "button2", "button3", "button4"].forEach((id) => {
-        document.getElementById(id).disabled = cpuTurn;
+        document.getElementById(id).disabled = cpuTurn || isRolling;
     });
     const statusBoard = document.getElementById("status-board");
     const badges = players
@@ -84,7 +87,7 @@ function renderStatus(prefix = "") {
 
     document.body.style.backgroundColor = "#14213d";
     statusBoard.innerHTML = `${prefix ? `<div class="status-message">${prefix}</div>` : ""}${badges}`;
-    if (cpuTurn) cpuTimer = setTimeout(takeCpuTurn, 800);
+    if (cpuTurn && !isRolling) cpuTimer = setTimeout(takeCpuTurn, 800);
 }
 
 function startNextRound(startingPlayerIndex = 0, message = "") {
@@ -167,6 +170,10 @@ function endCurrentTurn() {
 
 export function newGame() {
     clearTimeout(cpuTimer);
+    clearTimeout(rollTimer);
+    clearInterval(faceTimer);
+    isRolling = false;
+    document.querySelectorAll("img").forEach((image) => image.classList.remove("is-rolling"));
     const playerNames = getPlayerList();
     players.length = 0;
     playerNames.forEach((name) => {
@@ -189,44 +196,42 @@ function isFirstTurn() {
     return currentTurnRolls === 0;
 }
 
-function rollLeftDie() {
-    if(isFirstTurn()) {
-        return;
-    }
-    const image1 = document.querySelectorAll("img")[0];
-    const image2 = document.querySelectorAll("img")[1];
-    const leftDie = getRandomDieValue();
-    const rightDie = getDieValue(image2);
+function rollDice(indices) {
+    if (isRolling || !getCurrentPlayer()) return;
+    if (indices.length === 1 && isFirstTurn()) return;
 
-    setDieImage(image1, leftDie);
-    setDiceLabel(leftDie, rightDie);
-    recordRoll(getScoreFromDice(leftDie, rightDie));
+    const images = document.querySelectorAll("img");
+    isRolling = true;
+    renderStatus();
+    indices.forEach((index) => images[index].classList.add("is-rolling"));
+    faceTimer = setInterval(() => {
+        indices.forEach((index) => setDieImage(images[index], getRandomDieValue()));
+    }, 80);
+
+    rollTimer = setTimeout(() => {
+        clearInterval(faceTimer);
+        indices.forEach((index) => {
+            images[index].classList.remove("is-rolling");
+            setDieImage(images[index], getRandomDieValue());
+        });
+        isRolling = false;
+        const leftDie = getDieValue(images[0]);
+        const rightDie = getDieValue(images[1]);
+        setDiceLabel(leftDie, rightDie);
+        recordRoll(getScoreFromDice(leftDie, rightDie));
+    }, 560);
+}
+
+function rollLeftDie() {
+    rollDice([0]);
 }
 
 function rollBothDice() {
-    const image1 = document.querySelectorAll("img")[0];
-    const image2 = document.querySelectorAll("img")[1];
-    const leftDie = getRandomDieValue();
-    const rightDie = getRandomDieValue();
-
-    setDieImage(image1, leftDie);
-    setDieImage(image2, rightDie);
-    setDiceLabel(leftDie, rightDie);
-    recordRoll(getScoreFromDice(leftDie, rightDie));
+    rollDice([0, 1]);
 }
 
 function rollRightDie() {
-    if(isFirstTurn()) {
-        return;
-    }
-    const image1 = document.querySelectorAll("img")[0];
-    const image2 = document.querySelectorAll("img")[1];
-    const leftDie = getDieValue(image1);
-    const rightDie = getRandomDieValue();
-
-    setDieImage(image2, rightDie);
-    setDiceLabel(leftDie, rightDie);
-    recordRoll(getScoreFromDice(leftDie, rightDie));
+    rollDice([1]);
 }
 
 function endTurnEarly() {
@@ -250,6 +255,6 @@ for (const [id, action] of Object.entries({
     button4: endTurnEarly,
 })) {
     document.getElementById(id).addEventListener("click", () => {
-        if (!getCurrentPlayer()?.isCpu) action();
+        if (!isRolling && !getCurrentPlayer()?.isCpu) action();
     });
 }
