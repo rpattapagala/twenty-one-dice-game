@@ -3,9 +3,34 @@ import { Player } from "./player.js";
 
 const players = [];
 let currentPlayerIndex = 0;
-let roundStarted = false;
 let currentTurnRolls = 0;
 let roundRollLimit = 3;
+let cpuTimer = null;
+
+function takeCpuTurn() {
+    const player = getCurrentPlayer();
+    if (!player?.isCpu) return;
+
+    if (currentTurnRolls === 0) {
+        rollBothDice();
+        return;
+    }
+
+    const opponents = players.filter((opponent) => opponent !== player && opponent.turns > 0);
+    const beatsOpponents = opponents.length > 0 && opponents.every((opponent) =>
+        opponent.score !== 21 && player.score > opponent.score);
+    if (beatsOpponents || (opponents.length === 0 && player.score >= 100)) {
+        endCurrentTurn();
+        return;
+    }
+
+    const images = document.querySelectorAll("img");
+    const left = getDieValue(images[0]);
+    const right = getDieValue(images[1]);
+    if (left === right) rollBothDice();
+    else if (left < right) rollLeftDie();
+    else rollRightDie();
+}
 
 function getRandomDieValue() {
     return Math.floor(Math.random() * 6) + 1;
@@ -33,6 +58,11 @@ function getScoreFromDice(leftDie, rightDie) {
 }
 
 function renderStatus(prefix = "") {
+    clearTimeout(cpuTimer);
+    const cpuTurn = Boolean(getCurrentPlayer()?.isCpu);
+    ["button1", "button2", "button3", "button4"].forEach((id) => {
+        document.getElementById(id).disabled = cpuTurn;
+    });
     const statusBoard = document.getElementById("status-board");
     const badges = players
         .map((player, index) => {
@@ -54,19 +84,19 @@ function renderStatus(prefix = "") {
 
     document.body.style.backgroundColor = "#14213d";
     statusBoard.innerHTML = `${prefix ? `<div class="status-message">${prefix}</div>` : ""}${badges}`;
+    if (cpuTurn) cpuTimer = setTimeout(takeCpuTurn, 800);
 }
 
-function startNextRound(startingPlayerIndex = 0) {
+function startNextRound(startingPlayerIndex = 0, message = "") {
     players.forEach((player) => {
         player.score = 0;
         player.turns = 0;
     });
 
     currentPlayerIndex = startingPlayerIndex;
-    roundStarted = true;
     currentTurnRolls = 0;
     roundRollLimit = 3;
-    renderStatus();
+    renderStatus(message);
 }
 
 function finishRound() {
@@ -82,8 +112,7 @@ function finishRound() {
     });
 
     const winnerNames = winners.map((player) => player.name).join(", ");
-    renderStatus(`Round winner: ${winnerNames}.`);
-    startNextRound(players.indexOf(winners[0]));
+    startNextRound(players.indexOf(winners[0]), `Round winner: ${winnerNames}.`);
 }
 
 function advanceTurn() {
@@ -137,12 +166,14 @@ function endCurrentTurn() {
 }
 
 export function newGame() {
+    clearTimeout(cpuTimer);
     const playerNames = getPlayerList();
-    if (!roundStarted) {
-        players.length = 0;
-        playerNames.forEach((name) => {
-            players.push(new Player(name, 0, 0, 0));
-        });
+    players.length = 0;
+    playerNames.forEach((name) => {
+        players.push(new Player(name, 0, 0, 0));
+    });
+    if (players.length === 1) {
+        players.push(new Player("CPU", 0, 0, 0, true));
     }
 
     if (players.length === 0) {
@@ -212,7 +243,13 @@ function setDiceLabel(leftDie, rightDie) {
     }
 }
 
-document.getElementById("button1").addEventListener("click", rollLeftDie);
-document.getElementById("button2").addEventListener("click", rollBothDice);
-document.getElementById("button3").addEventListener("click", rollRightDie);
-document.getElementById("button4").addEventListener("click", endTurnEarly);
+for (const [id, action] of Object.entries({
+    button1: rollLeftDie,
+    button2: rollBothDice,
+    button3: rollRightDie,
+    button4: endTurnEarly,
+})) {
+    document.getElementById(id).addEventListener("click", () => {
+        if (!getCurrentPlayer()?.isCpu) action();
+    });
+}

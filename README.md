@@ -4,6 +4,8 @@
 
 The objective of the game is to score the highest roll in a set of a maximum of three rolls.
 
+Start with one player to play against an automatic CPU opponent. Add more players to play together locally without a CPU. The CPU follows the same roll limit, and controls are disabled during its turn.
+
 ## The turn order
 The turn starts with a round leader, they will roll the dice separately or both for a maximum of three rolls, after those rolls the turn will advance. 
 

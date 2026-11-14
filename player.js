@@ -3,11 +3,12 @@ const fields = document.getElementsByClassName("fieldset")[0];
 const values = [""];
 
 export class Player {
-    constructor(name, score, turns, wins) {
+    constructor(name, score, turns, wins, isCpu = false) {
         this.name = name;
         this.score = score;
         this.turns = turns;
         this.wins = wins;
+        this.isCpu = isCpu;
     }
 }
 
