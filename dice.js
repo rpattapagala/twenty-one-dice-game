@@ -9,10 +9,41 @@ let cpuTimer = null;
 let rollTimer = null;
 let faceTimer = null;
 let isRolling = false;
+let turnSeconds = 30;
+let turnTimer = null;
+let turnDeadline = 0;
+let turnExpired = false;
+let roundOver = false;
+let nextRoundLeader = 0;
+
+function startTurnTimer() {
+    clearInterval(turnTimer);
+    turnExpired = false;
+    turnDeadline = Date.now() + turnSeconds * 1000;
+    turnTimer = setInterval(updateTurnTimer, 50);
+    updateTurnTimer();
+}
+
+function updateTurnTimer() {
+    if (roundOver) return;
+    const remaining = Math.max(0, turnDeadline - Date.now());
+    const timer = document.getElementById("turn-timer");
+    timer.textContent = `${(remaining / 1000).toFixed(1)}s remaining`;
+    timer.classList.toggle("is-urgent", remaining <= 1000);
+    if (remaining > 0 || turnExpired) return;
+
+    turnExpired = true;
+    clearInterval(turnTimer);
+    clearTimeout(cpuTimer);
+    if (isRolling) return; // Finish the roll already in progress before ending the turn.
+    if (currentTurnRolls === 0) rollBothDice();
+    else endCurrentTurn();
+}
 
 function takeCpuTurn() {
     const player = getCurrentPlayer();
-    if (!player?.isCpu) return;
+    updateTurnTimer();
+    if (roundOver || !player?.isCpu || turnExpired || player !== getCurrentPlayer()) return;
 
     if (currentTurnRolls === 0) {
         rollBothDice();
@@ -64,7 +95,7 @@ function renderStatus(prefix = "") {
     clearTimeout(cpuTimer);
     const cpuTurn = Boolean(getCurrentPlayer()?.isCpu);
     ["button1", "button2", "button3", "button4"].forEach((id) => {
-        document.getElementById(id).disabled = cpuTurn || isRolling;
+        document.getElementById(id).disabled = roundOver || cpuTurn || isRolling;
     });
     const statusBoard = document.getElementById("status-board");
     const badges = players
@@ -87,10 +118,12 @@ function renderStatus(prefix = "") {
 
     document.body.style.backgroundColor = "#14213d";
     statusBoard.innerHTML = `${prefix ? `<div class="status-message">${prefix}</div>` : ""}${badges}`;
-    if (cpuTurn && !isRolling) cpuTimer = setTimeout(takeCpuTurn, 800);
+    if (!roundOver && cpuTurn && !isRolling && !turnExpired) cpuTimer = setTimeout(takeCpuTurn, 800);
 }
 
 function startNextRound(startingPlayerIndex = 0, message = "") {
+    roundOver = false;
+    document.getElementById("next-round").hidden = true;
     players.forEach((player) => {
         player.score = 0;
         player.turns = 0;
@@ -99,6 +132,7 @@ function startNextRound(startingPlayerIndex = 0, message = "") {
     currentPlayerIndex = startingPlayerIndex;
     currentTurnRolls = 0;
     roundRollLimit = 3;
+    startTurnTimer();
     renderStatus(message);
 }
 
@@ -115,7 +149,15 @@ function finishRound() {
     });
 
     const winnerNames = winners.map((player) => player.name).join(", ");
-    startNextRound(players.indexOf(winners[0]), `Round winner: ${winnerNames}.`);
+    roundOver = true;
+    nextRoundLeader = players.indexOf(winners[0]);
+    clearInterval(turnTimer);
+    clearTimeout(cpuTimer);
+    const timer = document.getElementById("turn-timer");
+    timer.textContent = "Round complete";
+    timer.classList.remove("is-urgent");
+    document.getElementById("next-round").hidden = false;
+    renderStatus(`Round winner: ${winnerNames}.`);
 }
 
 function advanceTurn() {
@@ -132,6 +174,7 @@ function advanceTurn() {
 
     currentPlayerIndex = nextIndex;
     currentTurnRolls = 0;
+    startTurnTimer();
     renderStatus();
 }
 
@@ -146,7 +189,7 @@ function recordRoll(rolledScore) {
 
     const reachedRollLimit = currentTurnRolls >= roundRollLimit;
 
-    if (rolledScore === 21 || reachedRollLimit) {
+    if (rolledScore === 21 || reachedRollLimit || turnExpired || Date.now() >= turnDeadline) {
         endCurrentTurn();
         return;
     }
@@ -168,7 +211,9 @@ function endCurrentTurn() {
     advanceTurn();
 }
 
-export function newGame() {
+export function newGame(seconds = 30) {
+    clearInterval(turnTimer);
+    turnSeconds = Number.isFinite(seconds) && seconds >= 1 && seconds <= 3600 ? seconds : 30;
     clearTimeout(cpuTimer);
     clearTimeout(rollTimer);
     clearInterval(faceTimer);
@@ -197,7 +242,7 @@ function isFirstTurn() {
 }
 
 function rollDice(indices) {
-    if (isRolling || !getCurrentPlayer()) return;
+    if (roundOver || isRolling || !getCurrentPlayer()) return;
     if (indices.length === 1 && isFirstTurn()) return;
 
     const images = document.querySelectorAll("img");
@@ -255,6 +300,16 @@ for (const [id, action] of Object.entries({
     button4: endTurnEarly,
 })) {
     document.getElementById(id).addEventListener("click", () => {
-        if (!isRolling && !getCurrentPlayer()?.isCpu) action();
+        if (roundOver) return;
+        const player = getCurrentPlayer();
+        if (Date.now() >= turnDeadline) {
+            updateTurnTimer();
+            return;
+        }
+        if (!isRolling && !turnExpired && player && !player.isCpu) action();
     });
 }
+
+document.getElementById("next-round").addEventListener("click", () => {
+    if (roundOver) startNextRound(nextRoundLeader);
+});

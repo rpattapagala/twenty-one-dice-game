@@ -38,13 +38,22 @@ button.addEventListener("click", () => {
 });
 
 const start = document.getElementById("start");
+const turnLimit = document.getElementById("turn-limit");
+const customTurnLimit = document.getElementById("custom-turn-limit");
+turnLimit.addEventListener("change", () => {
+    const custom = turnLimit.value === "custom";
+    document.getElementById("custom-time-setting").hidden = !custom;
+    customTurnLimit.disabled = !custom;
+});
 start.addEventListener("click", () => {
+    if (turnLimit.value === "custom" && !customTurnLimit.reportValidity()) return;
+    const seconds = Number(turnLimit.value === "custom" ? customTurnLimit.value : turnLimit.value);
     const players = values.map((value, index) => {
         const trimmedValue = value.trim();
         return trimmedValue || `Player ${index + 1}`;
     });
 
-    showBoard(players);
+    showBoard(players, seconds);
 });
 
 

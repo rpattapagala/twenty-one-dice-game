@@ -11,12 +11,12 @@ export function showSetup() {
     board.hidden = true;
 }
 
-export function showBoard(values) {
+export function showBoard(values, turnSeconds = 30) {
     fieldset.hidden = true;
     menuButtons.hidden = true;
     board.hidden = false;
     playerList = values.slice();
-    newGame();
+    newGame(turnSeconds);
 }
 
 export function getPlayerList() {

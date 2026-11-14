@@ -44,6 +44,38 @@ p {
   gap: 14px;
 }
 
+.timer-settings,
+.turn-timer {
+  margin: 16px 0;
+  color: #fefae0;
+  font-family: 'Indie Flower', cursive;
+  font-size: 1.5rem;
+}
+
+.timer-settings select,
+.timer-settings input {
+  margin: 8px;
+  padding: 8px 12px;
+  border: 2px solid #4ECCA3;
+  border-radius: 8px;
+  background: #232931;
+  color: #EEEEEE;
+  font: inherit;
+}
+
+.timer-settings input {
+  width: 100px;
+}
+
+.turn-timer {
+  width: 100%;
+  font-variant-numeric: tabular-nums;
+}
+
+.turn-timer.is-urgent {
+  color: #ffad80;
+}
+
 .player-badge {
   min-width: 170px;
   padding: 14px 18px;

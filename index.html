@@ -18,6 +18,18 @@
       <!-- fields are built here -->
       </div>
       <div class="menu-buttons">
+        <div class="timer-settings">
+          <label for="turn-limit">Time per turn</label>
+          <select id="turn-limit">
+            <option value="15">15 seconds</option>
+            <option value="30" selected>30 seconds</option>
+            <option value="custom">Custom</option>
+          </select>
+          <div id="custom-time-setting" hidden>
+            <label for="custom-turn-limit">Seconds</label>
+            <input id="custom-turn-limit" type="number" min="1" max="3600" step="1" value="10" required disabled>
+          </div>
+        </div>
         <br>
         <button id="add-player">
           <i class="fa-solid fa-plus"> Add Player</i>
@@ -29,6 +41,7 @@
       </div>
 
       <div class="board" style="flex-wrap: wrap; justify-content: space-around;">
+        <div class="turn-timer" id="turn-timer" role="timer" aria-label="Time remaining this turn"></div>
         <div class="dice">
           <img class="img1" src="./images/dice2.png" alt="">
         </div>
@@ -55,6 +68,7 @@
         </button>
 
         <div class="status-board" id="status-board"></div>
+        <button id="next-round" hidden>Next Round</button>
       </div>
     </div>
 
