@@ -20,14 +20,13 @@ function render() {
         input.type = "text";
         input.value = value;
         input.placeholder = `Player ${index + 1}`;
+        input.setAttribute("aria-label", `Player ${index + 1} name`);
 
         input.addEventListener("input", (e) => {
             values[index] = e.target.value;
         });
 
         fields.appendChild(input);
-        fields.appendChild(document.createElement("br"));
-        fields.appendChild(document.createElement("br"));
     });
 }
 
@@ -35,6 +34,7 @@ const button = document.getElementById("add-player");
 button.addEventListener("click", () => {
     values.push("");
     render();
+    fields.lastElementChild.focus();
 });
 
 const start = document.getElementById("start");
@@ -54,6 +54,8 @@ start.addEventListener("click", () => {
     });
 
     showBoard(players, seconds);
+    document.getElementById('online-panel').hidden = true;
+    document.getElementById('button2').focus();
 });
 
 

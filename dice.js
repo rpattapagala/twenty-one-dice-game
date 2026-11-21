@@ -7,7 +7,6 @@ let currentTurnRolls = 0;
 let roundRollLimit = 3;
 let cpuTimer = null;
 let rollTimer = null;
-let faceTimer = null;
 let isRolling = false;
 let turnSeconds = 30;
 let turnTimer = null;
@@ -58,7 +57,7 @@ function takeCpuTurn() {
         return;
     }
 
-    const images = document.querySelectorAll("img");
+    const images = document.querySelectorAll(".dice img");
     const left = getDieValue(images[0]);
     const right = getDieValue(images[1]);
     if (left === right) rollBothDice();
@@ -77,6 +76,7 @@ function getDieValue(image) {
 
 function setDieImage(image, value) {
     image.setAttribute("src", `./images/dice${value}.png`);
+    image.alt = `${image.classList.contains("img1") ? "Left" : "Right"} die: ${value}`;
 }
 
 function getCurrentPlayer() {
@@ -95,17 +95,19 @@ function renderStatus(prefix = "") {
     clearTimeout(cpuTimer);
     const cpuTurn = Boolean(getCurrentPlayer()?.isCpu);
     ["button1", "button2", "button3", "button4"].forEach((id) => {
-        document.getElementById(id).disabled = roundOver || cpuTurn || isRolling;
+        document.getElementById(id).disabled = roundOver || cpuTurn || isRolling ||
+            (id !== "button2" && currentTurnRolls === 0);
     });
     const statusBoard = document.getElementById("status-board");
     const badges = players
         .map((player, index) => {
-            const activeClass = index === currentPlayerIndex ? " is-active" : "";
+            const active = !roundOver && index === currentPlayerIndex;
+            const activeClass = active ? " is-active" : "";
             const rollCap = player.turns === 0 ? roundRollLimit : player.turns;
-            const rollLabel = index === currentPlayerIndex ? `${currentTurnRolls}/${rollCap} Rolls` : `${player.turns} Rolls`;
+            const rollLabel = active ? `${currentTurnRolls}/${rollCap} Rolls` : `${player.turns} Rolls`;
             return `
                 <div class="player-badge${activeClass}">
-                    <div class="player-badge__name">${player.name}</div>
+                        <div class="player-badge__name"></div>
                     <div class="player-badge__stats">
                         <span class="player-chip">${player.wins} Wins</span>
                         <span class="player-chip">${rollLabel}</span>
@@ -116,8 +118,16 @@ function renderStatus(prefix = "") {
         })
         .join("");
 
-    document.body.style.backgroundColor = "#14213d";
-    statusBoard.innerHTML = `${prefix ? `<div class="status-message">${prefix}</div>` : ""}${badges}`;
+    statusBoard.innerHTML = badges;
+    statusBoard.querySelectorAll(".player-badge__name").forEach((name, index) => {
+        name.textContent = players[index].name;
+    });
+    if (prefix) {
+        const message = document.createElement("div");
+        message.className = "status-message";
+        message.textContent = prefix;
+        statusBoard.prepend(message);
+    }
     if (!roundOver && cpuTurn && !isRolling && !turnExpired) cpuTimer = setTimeout(takeCpuTurn, 800);
 }
 
@@ -132,6 +142,7 @@ function startNextRound(startingPlayerIndex = 0, message = "") {
     currentPlayerIndex = startingPlayerIndex;
     currentTurnRolls = 0;
     roundRollLimit = 3;
+    document.getElementById("roll-score").textContent = "—";
     startTurnTimer();
     renderStatus(message);
 }
@@ -174,6 +185,7 @@ function advanceTurn() {
 
     currentPlayerIndex = nextIndex;
     currentTurnRolls = 0;
+    document.getElementById("roll-score").textContent = "—";
     startTurnTimer();
     renderStatus();
 }
@@ -216,9 +228,9 @@ export function newGame(seconds = 30) {
     turnSeconds = Number.isFinite(seconds) && seconds >= 1 && seconds <= 3600 ? seconds : 30;
     clearTimeout(cpuTimer);
     clearTimeout(rollTimer);
-    clearInterval(faceTimer);
     isRolling = false;
-    document.querySelectorAll("img").forEach((image) => image.classList.remove("is-rolling"));
+    const images = document.querySelectorAll(".dice img");
+    images.forEach((image) => image.classList.remove("is-rolling"));
     const playerNames = getPlayerList();
     players.length = 0;
     playerNames.forEach((name) => {
@@ -232,8 +244,7 @@ export function newGame(seconds = 30) {
         return;
     }
 
-    setDieImage(document.querySelectorAll("img")[0], 6);
-    setDieImage(document.querySelectorAll("img")[1], 6);
+    images.forEach((image) => setDieImage(image, 6));
     startNextRound(0);
 }
 
@@ -245,16 +256,11 @@ function rollDice(indices) {
     if (roundOver || isRolling || !getCurrentPlayer()) return;
     if (indices.length === 1 && isFirstTurn()) return;
 
-    const images = document.querySelectorAll("img");
+    const images = document.querySelectorAll(".dice img");
     isRolling = true;
     renderStatus();
     indices.forEach((index) => images[index].classList.add("is-rolling"));
-    faceTimer = setInterval(() => {
-        indices.forEach((index) => setDieImage(images[index], getRandomDieValue()));
-    }, 80);
-
     rollTimer = setTimeout(() => {
-        clearInterval(faceTimer);
         indices.forEach((index) => {
             images[index].classList.remove("is-rolling");
             setDieImage(images[index], getRandomDieValue());
@@ -285,12 +291,7 @@ function endTurnEarly() {
 
 function setDiceLabel(leftDie, rightDie) {
     const score = getScoreFromDice(leftDie, rightDie);
-    if(score !== 21) {
-        document.querySelector("h1").innerHTML = String(score);
-    }
-    else {
-        document.querySelector("h1").innerHTML = "Twenty One!";
-    }
+    document.getElementById("roll-score").textContent = score === 21 ? "Twenty One!" : String(score);
 }
 
 for (const [id, action] of Object.entries({
@@ -300,6 +301,7 @@ for (const [id, action] of Object.entries({
     button4: endTurnEarly,
 })) {
     document.getElementById(id).addEventListener("click", () => {
+        if (document.body.dataset.online === "true") return;
         if (roundOver) return;
         const player = getCurrentPlayer();
         if (Date.now() >= turnDeadline) {
@@ -311,5 +313,6 @@ for (const [id, action] of Object.entries({
 }
 
 document.getElementById("next-round").addEventListener("click", () => {
+    if (document.body.dataset.online === "true") return;
     if (roundOver) startNextRound(nextRoundLeader);
 });

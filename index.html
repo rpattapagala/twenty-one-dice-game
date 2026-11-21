@@ -1,81 +1,111 @@
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
+﻿<!DOCTYPE html>
+<html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Dice</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f4f1e9">
+    <title>Twenty One | Dice Game</title>
     <link rel="stylesheet" href="styles.css">
-    <!-- Link Google fonts -->
-    <link href="https://fonts.googleapis.com/css?family=Indie+Flower|Lobster" rel="stylesheet">
-    <!-- Link font awesome library -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   </head>
   <body>
-
-    <div class="container">
-      <h1>Twenty One</h1>
-
-      <div class="fieldset">
-      <!-- fields are built here -->
-      </div>
-      <div class="menu-buttons">
-        <div class="timer-settings">
-          <label for="turn-limit">Time per turn</label>
-          <select id="turn-limit">
-            <option value="15">15 seconds</option>
-            <option value="30" selected>30 seconds</option>
-            <option value="custom">Custom</option>
-          </select>
-          <div id="custom-time-setting" hidden>
-            <label for="custom-turn-limit">Seconds</label>
-            <input id="custom-turn-limit" type="number" min="1" max="3600" step="1" value="10" required disabled>
+    <main class="container">
+      <header class="site-header">
+        <div class="wordmark"><span class="brand-die" aria-hidden="true"><i></i><i></i><i></i></span> Twenty One</div>
+        <details class="rules">
+          <summary>How to play</summary>
+          <div class="rules-content">
+            <p>Roll both dice to start. Then reroll one or both, or end your turn. The round leader gets up to three rolls and sets the limit for everyone else.</p>
+            <p>Read the higher die first. A 5 and a 3 score 53. Doubles score in hundreds, and 2–1 beats every other roll.</p>
           </div>
-        </div>
-        <br>
-        <button id="add-player">
-          <i class="fa-solid fa-plus"> Add Player</i>
-        </button>
+        </details>
+      </header>
 
-        <button id="start">
-          <i class="fa-solid fa-arrow"> Start</i>
-        </button>
+      <div class="intro">
+        <h1>Twenty One<span>.</span></h1>
+        <p>Two dice. Up to three rolls. The highest score wins.</p>
       </div>
 
-      <div class="board" style="flex-wrap: wrap; justify-content: space-around;">
-        <div class="turn-timer" id="turn-timer" role="timer" aria-label="Time remaining this turn"></div>
-        <div class="dice-plate">
-          <div class="dice">
-            <img class="img1" src="./images/dice2.png" alt="">
+      <div class="layout">
+        <section class="card table-card" aria-labelledby="table-title">
+          <header class="card-heading table-heading">
+            <h2 id="table-title">Dice table</h2>
+            <div class="turn-timer" id="turn-timer" role="timer" aria-label="Time remaining this turn"></div>
+          </header>
+          <div class="dice-plate">
+            <div class="felt-rings" aria-hidden="true"></div>
+            <div class="dice"><img class="img1" src="./images/dice2.png" alt="Left die: 2" width="256" height="256"></div>
+            <div class="dice"><img class="img2" src="./images/dice1.png" alt="Right die: 1" width="256" height="256"></div>
           </div>
-
-          <div class="dice">
-            <img class="img2" src="./images/dice1.png" alt="">
+          <div class="table-idle">Choose how you want to play to start rolling.</div>
+          <div class="board" hidden>
+            <div class="roll-result"><span>Current score</span><output id="roll-score" aria-live="polite">—</output></div>
+            <div class="button-container">
+              <button id="button1">Roll left</button>
+              <button id="button2" class="primary">Roll both</button>
+              <button id="button3">Roll right</button>
+            </div>
+            <button class="text-button" id="button4">End turn</button>
           </div>
-        </div>
+        </section>
 
-        <div class="button-container">
-          <button id="button1">
-            <i class="fa-solid fa-shuffle"> Left</i>
-          </button>
-          <button id="button2">
-            <i class="fa-solid fa-shuffle"> Both</i>
-          </button>
-          <button id="button3">
-            <i class="fa-solid fa-shuffle"> Right</i>
-          </button>
-        </div>
-        <button class="stop-button" id="button4">
-          <i class="fa-solid fa-stop"> End</i>
-        </button>
+        <aside class="sidebar" aria-label="Game options and scores">
+          <section class="card setup-card" id="local-panel" aria-labelledby="local-title">
+            <h2 id="local-title">Local play</h2>
+            <p>Play against the CPU or add players to share this device.</p>
+            <div class="fieldset"></div>
+            <div class="menu-buttons">
+              <button class="text-button" id="add-player">+ Add player</button>
+              <div class="timer-settings">
+                <label for="turn-limit">Time per turn</label>
+                <select id="turn-limit">
+                  <option value="15">15 seconds</option>
+                  <option value="30" selected>30 seconds</option>
+                  <option value="custom">Custom</option>
+                </select>
+                <div id="custom-time-setting" hidden>
+                  <label for="custom-turn-limit">Seconds</label>
+                  <input id="custom-turn-limit" type="number" min="1" max="3600" step="1" value="10" required disabled>
+                </div>
+              </div>
+              <button id="start" class="primary">Start local game <span aria-hidden="true">→</span></button>
+            </div>
+          </section>
 
-        <div class="status-board" id="status-board"></div>
-        <button id="next-round" hidden>Next Round</button>
+          <section class="card setup-card" id="online-panel" aria-labelledby="online-title">
+            <h2 id="online-title">Play online</h2>
+            <div id="online-setup">
+              <p>Create a room with the turn time above, or join with a code.</p>
+              <div class="online-fields">
+                <div><label for="online-name">Your name</label><input id="online-name" type="text" maxlength="32" placeholder="Name" autocomplete="nickname"></div>
+                <div><label for="room-code">Room code</label><input id="room-code" type="text" maxlength="6" placeholder="Code" autocapitalize="characters"></div>
+              </div>
+              <div class="online-actions">
+                <button id="create-room">Create room</button>
+                <button id="join-room">Join room</button>
+              </div>
+            </div>
+            <div id="online-room" hidden>
+              <div id="room-label"></div>
+              <div id="room-players"></div>
+              <div class="online-actions">
+                <button id="online-start" class="primary">Start game</button>
+                <button id="copy-invite">Copy invite</button>
+              </div>
+              <button id="leave-room" class="text-button">Leave room</button>
+            </div>
+            <div id="online-message" role="status" aria-live="polite"></div>
+          </section>
+
+          <section class="card setup-card scoreboard" aria-labelledby="scoreboard-title">
+            <h2 id="scoreboard-title">Scoreboard</h2>
+            <div class="status-board" id="status-board"></div>
+            <button id="next-round" class="primary" hidden>Next round <span aria-hidden="true">→</span></button>
+          </section>
+        </aside>
       </div>
-    </div>
-
+      <footer>Made by chocolate</footer>
+    </main>
     <script type="module" src="./player.js"></script>
+    <script type="module" src="./online.js"></script>
   </body>
-
-  <footer>
-    made by chocolate
-  </footer>
 </html>

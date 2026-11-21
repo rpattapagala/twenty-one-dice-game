@@ -1,0 +1,6 @@
+{
+  "name": "twenty-one-dice-game",
+  "private": true,
+  "scripts": { "start": "node server.cjs", "test": "node --test test/*.test.cjs" },
+  "engines": { "node": ">=20" }
+}
